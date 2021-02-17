@@ -37,7 +37,7 @@ def generate(client, parameters, progress_callback):
         requests_rql &= R().created.le(parameters['date']['before'])
     requests_rql &= R().status.eq("approved")
     requests_rql &= R().asset.connection.type.eq('production')
-    requests_rql &= R().asset.product.id.oneof(parameters['product']['choices'])
+    requests_rql &= R().asset.product.id.oneof(parameters['products']['choices'])
     requests_rql &= R().type.oneof(request_types)
     requests = client.requests.filter(requests_rql).order_by("-created")
 
