@@ -7,7 +7,6 @@ from reports.utils import (
     get_ta_parameter,
 )
 from concurrent import futures
-from datetime import datetime
 
 
 def generate(client, parameters, progress_callback):
@@ -169,8 +168,8 @@ def get_subscription_record(client, subscription, progress):
                     subscription["asset"]["product"]["name"],
                     subscription["asset"]["connection"]["vendor"]['id'],
                     subscription["asset"]["connection"]["vendor"]["name"],
-                    datetime.fromisoformat(subscription["events"]["created"]["at"]),
-                    datetime.fromisoformat(subscription["asset"]["events"]["created"]["at"]),
+                    convert_to_datetime(subscription["events"]["created"]["at"]),
+                    convert_to_datetime(subscription["asset"]["events"]["created"]["at"]),
                     subscription["asset"]["id"],
                     subscription["asset"]["status"],
                     subscription["asset"]["external_id"],
