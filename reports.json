@@ -52,6 +52,63 @@
                "required":true
             }
          ]
+      },
+      {
+         "name":"Billing requests report for syndication partners",
+         "readme_file":"reports/billing_requests/Readme.md",
+         "template":"reports/billing_requests/template.xlsx",
+         "start_row":2,
+         "start_col":1,
+         "entrypoint":"reports.billing_requests.entrypoint.generate",
+         "audience":[
+            "provider"
+         ],
+         "report_spec":"1",
+         "parameters":[
+            {
+               "id":"date",
+               "type":"date_range",
+               "name":"Report period",
+               "description":"Provide the time period to create the report",
+               "required":true
+            },
+            {
+               "id":"product",
+               "type":"product",
+               "name":"Product list",
+               "required":true,
+               "description":"Select the products you want to include in report"
+            }
+         ]
+      },
+      {
+         "name":"Billing requests report for syndication partners at line item level",
+         "readme_file":"reports/billing_requests_line_item/Readme.md",
+         "template":"reports/billing_requests_line_item/template.xlsx",
+         "start_row":2,
+         "start_col":1,
+         "entrypoint":"reports.billing_requests_line_item.entrypoint.generate",
+         "audience":[
+            "provider",
+            "vendor"
+         ],
+         "report_spec":"1",
+         "parameters":[
+            {
+               "id":"date",
+               "type":"date_range",
+               "name":"Report period",
+               "description":"Provide the time period to create the report",
+               "required":true
+            },
+            {
+               "id":"product",
+               "type":"product",
+               "name":"Product list",
+               "required":true,
+               "description":"Select the products you want to include in report"
+            }
+         ]
       }
    ]
 }
