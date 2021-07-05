@@ -53,6 +53,13 @@ def get_parameter(request, param_id):
     return "-"
 
 
+def get_asset_parameter(asset, param_id):
+    for param in asset["params"]:
+        if param["id"] == param_id:
+            return param["value"]
+    return "-"
+
+
 def get_ta_parameter(request, tier, param_id, client):
     try:
         rql = R().configuration.account.id.eq(request['asset']['tiers'][tier]['id'])

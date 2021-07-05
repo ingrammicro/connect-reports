@@ -109,6 +109,34 @@
                "description":"Select the products you want to include in report"
             }
          ]
+      },
+      {
+         "name":"AWS Assets report",
+         "readme_file":"reports/aws_products/Readme.md",
+         "template":"reports/aws_products/template.xlsx",
+         "start_row":2,
+         "start_col":1,
+         "entrypoint":"reports.aws_products.entrypoint.generate",
+         "audience":[
+            "provider"
+         ],
+         "report_spec":"1",
+         "parameters":[
+            {
+               "id":"date",
+               "type":"date_range",
+               "name":"Assets range",
+               "description":"Provide the time range of assets creation",
+               "required":true
+            },
+            {
+               "id":"products",
+               "type":"product",
+               "name":"Product list",
+               "required":true,
+               "description":"Select the products that represents AWS, ALL option is not valid"
+            }
+         ]
       }
    ]
 }
