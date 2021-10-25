@@ -5,8 +5,41 @@ from reports.utils import (
     get_value,
 )
 
+awsmpn = {}
+
+
+def get_aws_mpn(client, account, product):
+    if awsmpn.get(account):
+        return awsmpn.get(account)
+    rql_filter = R()
+    rql_filter &= R().product.id.eq(product)
+    rql_filter &= R().account.id.eq(account)
+    tc = client.ns('tier').configs.filter(rql_filter).first()
+    if tc:
+        for param in tc['params']:
+            if param['id'] == 'awsApnId':
+                awsmpn['account'] = param.get('value', '-')
+                return param.get('value', '-')
+    return '-'
+
+
+def warm_up_tcs(client, products):
+    rql_filter = R()
+    rql_filter &= R().product.id.oneof(products)
+    tcs = client.ns('tier').configs.filter(rql_filter).all()
+    for tc in tcs:
+        if not awsmpn.get(f'{tc["account"]["id"]}_{tc["product"]["id"]}'):
+            for param in tc['params']:
+                if param['id'] == 'awsApnId':
+                    awsmpn[f'{tc["account"]["id"]}_{tc["product"]["id"]}'] = param.get('value', '-')
+
+
+def get_awsmpn(account, product):
+    return awsmpn.get(f'{account}_{product}', '-')
+
 
 def generate(client, parameters, progress_callback):
+    warm_up_tcs(client, parameters['products']['choices'])
     subscriptions_rql = R()
     if not parameters.get("products") or len(parameters['products']['choices']) < 1:
         raise RuntimeError("AWS products was not selected")
@@ -47,6 +80,8 @@ def generate(client, parameters, progress_callback):
             get_value(subscription['tiers']["tier1"], "contact_info", "postal_code"),
             get_value(subscription['tiers']["tier1"], "contact_info", "country"),
             get_value(subscription['tiers']["tier1"]["contact_info"], "contact", "email"),
+            # get_aws_mpn(client, get_value(subscription['tiers'], "tier1", 'id'), subscription['product']['id'])
+            get_awsmpn(get_value(subscription['tiers'], "tier1", 'id'), subscription['product']['id'])
         )
         progress += 1
         progress_callback(progress, total_subscriptions)
