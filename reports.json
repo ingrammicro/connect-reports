@@ -292,6 +292,24 @@
             }
          ],
          "parameters": []
+      },
+      {
+         "name": "Syndication products for Dragon tool",
+         "readme_file": "reports/im_syndication_products_availability/Readme.md",
+         "entrypoint": "reports.im_syndication_products_availability.entrypoint.generate",
+         "audience": [
+            "provider"
+         ],
+         "report_spec": "2",
+         "renderers": [
+            {
+               "id": "json",
+               "type": "json",
+               "default": true,
+               "description": "Export data as JSON"
+            }
+         ],
+         "parameters": []
       }
    ]
 }
