@@ -56,6 +56,7 @@ def generate(client, parameters, progress_callback):
                 progress,
             )
         )
+        progress.increment()
 
     for future in futures.as_completed(wait_for):
         results = future.result()
