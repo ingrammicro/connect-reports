@@ -49,7 +49,9 @@ def generate(client, parameters, progress_callback):
 
     progress = Progress(progress_callback, total_subscriptions + total_requests)
 
-    ex = futures.ThreadPoolExecutor()
+    ex = futures.ThreadPoolExecutor(
+        max_workers=6,
+    )
 
     wait_for = []
     for request in requests:
@@ -61,6 +63,7 @@ def generate(client, parameters, progress_callback):
                 progress,
             )
         )
+        progress.increment()
 
     for future in futures.as_completed(wait_for):
         results = future.result()
