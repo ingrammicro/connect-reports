@@ -8,18 +8,51 @@ from reports.utils import (
 )
 from concurrent import futures
 
+HEADERS = (
+    'Request Type',
+    'Request ID',
+    'Product ID',
+    'Product Name',
+    'Vendor ID Vendor Name Request Created At',
+    'Subscription Created At Subscription ID Subscription Status Subscription External ID',
+    'Subscription Customer Customer external id',
+    'Customer Country',
+    'Tier 1 Company name Tier 1 External Id',
+    'Tier 1 Country location Tier 2 Company name Tier 2 External Id',
+    'Tier 2 Country location Item ID Item MPN',
+    'Item Description',
+    'Item Period Item Old Quantity Item Quantity Item delta',
+    'Provider ID Provider Name Source MKP', 'MKP Name',
+    'Contract Type Microsoft Tier1 MPN (if any)',
+)
 
-def generate(client, parameters, progress_callback):
+
+def generate(
+        client=None,
+        parameters=None,
+        progress_callback=None,
+        renderer_type=None,
+        extra_context_callback=None,
+):
     subscriptions_rql = R()
-    if not parameters.get("products") or len(parameters['products']['choices']) < 1:
-        raise RuntimeError("Microsoft products was not selected")
+
+    products = [
+        'PRD-814-505-018',
+        'PRD-561-716-033',
+        'PRD-275-843-418',
+        'PRD-812-485-361',
+        'PRD-587-782-348',
+        'PRD-102-273-313',
+        'PRD-376-475-231'
+    ]
+
 
     if parameters.get("date"):
         subscriptions_rql &= R().events.created.at.ge(parameters['date']['after'])
         subscriptions_rql &= R().events.created.at.le(parameters['date']['before'])
     subscriptions_rql &= R().status.eq("approved")
     subscriptions_rql &= R().type.eq("vendor")
-    subscriptions_rql &= R().asset.product.id.oneof(parameters['products']['choices'])
+    subscriptions_rql &= R().asset.product.id.oneof(products)
 
     subscriptions = (
         client.ns('subscriptions')
@@ -36,7 +69,7 @@ def generate(client, parameters, progress_callback):
         requests_rql &= R().created.le(parameters['date']['before'])
     requests_rql &= R().status.eq("approved")
     requests_rql &= R().asset.connection.type.eq('production')
-    requests_rql &= R().asset.product.id.oneof(parameters['products']['choices'])
+    requests_rql &= R().asset.product.id.oneof(products)
     requests_rql &= R().type.oneof(request_types)
     requests = client.requests.filter(requests_rql).order_by("-created")
 
@@ -45,6 +78,10 @@ def generate(client, parameters, progress_callback):
     progress = Progress(progress_callback, total_subscriptions + total_requests)
 
     ex = futures.ThreadPoolExecutor()
+
+    if renderer_type == 'csv':
+        yield HEADERS
+
 
     wait_for = []
     for request in requests:
@@ -61,7 +98,13 @@ def generate(client, parameters, progress_callback):
     for future in futures.as_completed(wait_for):
         results = future.result()
         for result in results:
-            yield result
+            if renderer_type == 'json':
+                yield {
+                    HEADERS[idx].replace(' ', '_').lower(): value
+                    for idx, value in enumerate(result)
+                }
+            else:
+                yield result
 
     wait_for = []
     for subscription in subscriptions:
@@ -73,11 +116,18 @@ def generate(client, parameters, progress_callback):
                 progress,
             )
         )
+        progress.increment()
 
     for future in futures.as_completed(wait_for):
         results = future.result()
         for result in results:
-            yield result
+            if renderer_type == 'json':
+                yield {
+                    HEADERS[idx].replace(' ', '_').lower(): value
+                    for idx, value in enumerate(result)
+                }
+            else:
+                yield result
 
 
 def get_request_record(client, request, progress):

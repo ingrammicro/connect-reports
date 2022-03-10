@@ -75,6 +75,10 @@ def get_ta_parameter(request, tier, param_id, client):
     return "-"
 
 
+def today_str():
+    return datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+
+
 class Progress:
 
     def __init__(self, callback, total):
