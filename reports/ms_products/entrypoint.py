@@ -9,21 +9,15 @@ from reports.utils import (
 from concurrent import futures
 
 HEADERS = (
-    'Request Type',
-    'Request ID',
-    'Product ID',
-    'Product Name',
-    'Vendor ID Vendor Name Request Created At',
-    'Subscription Created At Subscription ID Subscription Status Subscription External ID',
-    'Subscription Customer Customer external id',
-    'Customer Country',
-    'Tier 1 Company name Tier 1 External Id',
-    'Tier 1 Country location Tier 2 Company name Tier 2 External Id',
-    'Tier 2 Country location Item ID Item MPN',
-    'Item Description',
-    'Item Period Item Old Quantity Item Quantity Item delta',
-    'Provider ID Provider Name Source MKP', 'MKP Name',
-    'Contract Type Microsoft Tier1 MPN (if any)',
+    'Request Type', 'Request ID', 'Product ID', 'Product Name', 'Vendor ID', 'Vendor Name',
+    'Request Created At', 'Subscription Created At', 'Subscription ID', 'Subscription Status',
+    'Subscription External ID', 'Subscription Customer', 'Customer external id',
+    'Customer Country', 'Tier 1 Company name', 'Tier 1 External Id', 'Tier 1 Country location',
+    'Tier 2 Company name', 'Tier 2 External Id', 'Tier 2 Country location', 'Item ID', 'Item MPN',
+    'Item Description', 'Item Period', 'Item Old Quantity', 'Item Quantity', 'Item delta',
+    'Provider ID', 'Provider Name', 'Source MKP', 'MKP Name', 'Contract Type',
+    'Microsoft Tier1 Domain', 'Microsoft Subscription ID', 'Microsoft Customer ID',
+    'Microsoft Order ID', 'Microsoft Subscription Plan', 'Microsoft Tier1 MPN',
 )
 
 
