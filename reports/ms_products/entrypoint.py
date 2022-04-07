@@ -205,7 +205,6 @@ def get_request_record(client, request, progress):
             )
         except Exception:
             pass
-    progress.increment()
     return output
 
 
@@ -286,7 +285,6 @@ def get_subscription_record(client, subscription, progress):
             )
     except Exception:
         pass
-    progress.increment()
     return output
 
 
