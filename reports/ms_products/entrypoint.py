@@ -20,17 +20,9 @@ HEADERS = (
     'Microsoft Order ID', 'Microsoft Subscription Plan', 'Microsoft Tier1 MPN',
 )
 
+TC_CACHE = {}
 
-def generate(
-        client=None,
-        parameters=None,
-        progress_callback=None,
-        renderer_type=None,
-        extra_context_callback=None,
-):
-    subscriptions_rql = R()
-
-    products = [
+PRODUCTS = [
         'PRD-814-505-018',
         'PRD-561-716-033',
         'PRD-275-843-418',
@@ -40,13 +32,28 @@ def generate(
         'PRD-376-475-231'
     ]
 
+def generate(
+        client=None,
+        parameters=None,
+        progress_callback=None,
+        renderer_type=None,
+        extra_context_callback=None,
+):
+
+    limit = client.default_limit
+    client.default_limit = 100
+    populate_ta_cache(parameters, client)
+    client.default_limit = limit
+    subscriptions_rql = R()
 
     if parameters.get("date"):
         subscriptions_rql &= R().events.created.at.ge(parameters['date']['after'])
         subscriptions_rql &= R().events.created.at.le(parameters['date']['before'])
     subscriptions_rql &= R().status.eq("approved")
     subscriptions_rql &= R().type.eq("vendor")
-    subscriptions_rql &= R().asset.product.id.oneof(products)
+    if parameters.get('mkp') and parameters['mkp']['all'] is False:
+        subscriptions_rql &= R().asset.marketplace.id.oneof(parameters['mkp']['choices'])
+    subscriptions_rql &= R().asset.product.id.oneof(PRODUCTS)
 
     subscriptions = (
         client.ns('subscriptions')
@@ -63,13 +70,15 @@ def generate(
         requests_rql &= R().created.le(parameters['date']['before'])
     requests_rql &= R().status.eq("approved")
     requests_rql &= R().asset.connection.type.eq('production')
-    requests_rql &= R().asset.product.id.oneof(products)
+    requests_rql &= R().asset.product.id.oneof(PRODUCTS)
+    if parameters.get('mkp') and parameters['mkp']['all'] is False:
+        requests_rql &= R().asset.marketplace.id.oneof(parameters['mkp']['choices'])
     requests_rql &= R().type.oneof(request_types)
-    requests = client.requests.filter(requests_rql).order_by("-created")
+    requests = client.requests.filter(requests_rql)
 
     total_requests = requests.count()
-
-    progress = Progress(progress_callback, total_subscriptions + total_requests)
+    total_progress = total_subscriptions + total_requests
+    progress = Progress(progress_callback, total_progress)
 
     ex = futures.ThreadPoolExecutor()
 
@@ -308,5 +317,23 @@ def get_product_specifics(request, client):
             "microsoft_plan_subscription_id",
         )
         values["microsoft_order_id"] = order_id
-        values["microsoft_tier1_mpn"] = get_ta_parameter(request, "tier1", "tier1_mpn", client)
+        values["microsoft_tier1_mpn"] = TC_CACHE[request['asset']['product']['id']][request['asset']['tiers']['tier1']['id']]
     return values
+
+
+def populate_ta_cache(parameters, client):
+    rql = R()
+    rql &= R().product.id.oneof(PRODUCTS)
+    if parameters.get('mkp') and parameters['mkp']['all'] is False:
+        rql &= R().marketplace.id.oneof(parameters['mkp']['choices'])
+    tcs = client.ns('tier').collection('configs').filter(rql)
+    for tc in tcs:
+        if tc['product']['id'] not in TC_CACHE:
+            TC_CACHE[tc['product']['id']] = {}
+        TC_CACHE[tc['product']['id']][tc['account']['id']] = get_param_value(tc['configuration']['params'], 'tier1_mpn')
+
+def get_param_value(params, param_id):
+    for param in params:
+        if param_id == param['id']:
+            return param['value']
+    return '-'

@@ -33,7 +33,7 @@
             {
                "id":"xlsx",
                "type":"xlsx",
-               "default":true,
+               "default":false,
                "description":"Export data in Microsoft Excel 2020 format.",
                "template":"reports/ms_products/template.xlsx",
                "args":{
@@ -50,7 +50,7 @@
             {
                "id":"csv",
                "type":"csv",
-               "default":false,
+               "default":true,
                "description":"Export data as CSV"
             }
          ],
@@ -65,6 +65,13 @@
                "name":"Report period",
                "description":"Provide the time period to create the report",
                "required":true
+            },
+            {
+               "id":"mkp",
+               "type":"marketplace",
+               "name":"Marketplaces",
+               "required":true,
+               "description":"Select the marketplaces you want to include in report"
             }
          ]
       },
