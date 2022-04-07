@@ -63,7 +63,8 @@ def get_asset_parameter(asset, param_id):
 def get_ta_parameter(request, tier, param_id, client):
     try:
         rql = R().configuration.account.id.eq(request['asset']['tiers'][tier]['id'])
-        rql = rql & R().status.eq('approved')
+        rql &= R().status.eq('approved')
+        rql &= R().product.id.eq(request['asset']['product']['id'])
         tc = client.ns('tier').collection("config-requests").filter(rql).order_by('-created').first()
         if 'params' not in tc:
             return "-"

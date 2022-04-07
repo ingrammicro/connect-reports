@@ -65,13 +65,6 @@
                "name":"Report period",
                "description":"Provide the time period to create the report",
                "required":true
-            },
-            {
-               "id":"mkp",
-               "type":"marketplace",
-               "name":"Marketplaces",
-               "required":true,
-               "description":"Select the marketplaces you want to include in report"
             }
          ]
       },

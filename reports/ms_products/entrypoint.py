@@ -39,11 +39,11 @@ def generate(
         renderer_type=None,
         extra_context_callback=None,
 ):
-
-    limit = client.default_limit
-    client.default_limit = 100
-    populate_ta_cache(parameters, client)
-    client.default_limit = limit
+    init_tc_cache()
+    #limit = client.default_limit
+    #client.default_limit = 100
+    # populate_ta_cache(parameters, client)
+    #client.default_limit = limit
     subscriptions_rql = R()
 
     if parameters.get("date"):
@@ -315,9 +315,19 @@ def get_product_specifics(request, client):
             "microsoft_plan_subscription_id",
         )
         values["microsoft_order_id"] = order_id
-        values["microsoft_tier1_mpn"] = TC_CACHE[request['asset']['product']['id']][request['asset']['tiers']['tier1']['id']]
+        values["microsoft_tier1_mpn"] = get_param_mpn(request, client)
     return values
 
+def init_tc_cache():
+    for product in PRODUCTS:
+        TC_CACHE[product] = {}
+
+def get_param_mpn(request, client):
+    if request['asset']['tiers']['tier1']['id'] in TC_CACHE[request['asset']['product']['id']]:
+        return TC_CACHE[request['asset']['product']['id']][request['asset']['tiers']['tier1']['id']]
+    mpn = get_ta_parameter(request, 'tier1', 'tier1_mpn', client)
+    TC_CACHE[request['asset']['product']['id']][request['asset']['tiers']['tier1']['id']] = mpn
+    return mpn
 
 def populate_ta_cache(parameters, client):
     rql = R()
