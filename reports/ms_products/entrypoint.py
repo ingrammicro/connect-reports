@@ -330,10 +330,10 @@ def populate_ta_cache(parameters, client):
     for tc in tcs:
         if tc['product']['id'] not in TC_CACHE:
             TC_CACHE[tc['product']['id']] = {}
-        TC_CACHE[tc['product']['id']][tc['account']['id']] = get_param_value(tc['configuration']['params'], 'tier1_mpn')
+        TC_CACHE[tc['product']['id']][tc['account']['id']] = get_param_value(tc['params'], 'tier1_mpn')
 
 def get_param_value(params, param_id):
     for param in params:
         if param_id == param['id']:
-            return param['value']
+            return param['value'] if 'value' in param else '-'
     return '-'
