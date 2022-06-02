@@ -96,28 +96,28 @@ def generate(
         yield HEADERS
 
 
-    # wait_for = []
-    # for request in requests:
-    #     wait_for.append(
-    #         ex.submit(
-    #             get_request_record,
-    #             client,
-    #             request,
-    #             progress,
-    #         )
-    #     )
-    #     progress.increment()
-    #
-    # for future in futures.as_completed(wait_for):
-    #     results = future.result()
-    #     for result in results:
-    #         if renderer_type == 'json':
-    #             yield {
-    #                 HEADERS[idx].replace(' ', '_').lower(): value
-    #                 for idx, value in enumerate(result)
-    #             }
-    #         else:
-    #             yield result
+    wait_for = []
+    for request in requests:
+        wait_for.append(
+            ex.submit(
+                get_request_record,
+                client,
+                request,
+                progress,
+            )
+        )
+        progress.increment()
+
+    for future in futures.as_completed(wait_for):
+        results = future.result()
+        for result in results:
+            if renderer_type == 'json':
+                yield {
+                    HEADERS[idx].replace(' ', '_').lower(): value
+                    for idx, value in enumerate(result)
+                }
+            else:
+                yield result
 
     wait_for = []
     for subscription in subscriptions:
