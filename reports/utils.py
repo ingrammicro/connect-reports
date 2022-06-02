@@ -14,6 +14,9 @@ def convert_to_datetime(param_value):
     )
 
 
+def convert_to_datetime_subscription(param_value):
+    return datetime.fromisoformat(param_value).strftime("%Y-%m-%d %H:%M:%S")
+
 def get_basic_value(base, value):
     if base and value in base:
         return base[value]

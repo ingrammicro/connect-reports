@@ -1,12 +1,14 @@
 from cnct import R
 from reports.utils import (
     convert_to_datetime,
+    convert_to_datetime_subscription,
     Progress,
     delta,
     get_parameter,
     get_ta_parameter,
 )
 from concurrent import futures
+
 
 HEADERS = (
     'Request Type', 'Request ID', 'Product ID', 'Product Name', 'Vendor ID', 'Vendor Name',
@@ -49,7 +51,7 @@ def generate(
 ):
     init_tc_cache()
     #limit = client.default_limit
-    #client.default_limit = 100
+    client.default_limit = 1000
     # populate_ta_cache(parameters, client)
     #client.default_limit = limit
     subscriptions_rql = R()
@@ -94,28 +96,28 @@ def generate(
         yield HEADERS
 
 
-    wait_for = []
-    for request in requests:
-        wait_for.append(
-            ex.submit(
-                get_request_record,
-                client,
-                request,
-                progress,
-            )
-        )
-        progress.increment()
-
-    for future in futures.as_completed(wait_for):
-        results = future.result()
-        for result in results:
-            if renderer_type == 'json':
-                yield {
-                    HEADERS[idx].replace(' ', '_').lower(): value
-                    for idx, value in enumerate(result)
-                }
-            else:
-                yield result
+    # wait_for = []
+    # for request in requests:
+    #     wait_for.append(
+    #         ex.submit(
+    #             get_request_record,
+    #             client,
+    #             request,
+    #             progress,
+    #         )
+    #     )
+    #     progress.increment()
+    #
+    # for future in futures.as_completed(wait_for):
+    #     results = future.result()
+    #     for result in results:
+    #         if renderer_type == 'json':
+    #             yield {
+    #                 HEADERS[idx].replace(' ', '_').lower(): value
+    #                 for idx, value in enumerate(result)
+    #             }
+    #         else:
+    #             yield result
 
     wait_for = []
     for subscription in subscriptions:
@@ -229,8 +231,8 @@ def get_subscription_record(client, subscription, progress):
                     subscription["asset"]["product"]["name"],
                     subscription["asset"]["connection"]["vendor"]['id'],
                     subscription["asset"]["connection"]["vendor"]["name"],
-                    convert_to_datetime(subscription["events"]["created"]["at"]),
-                    convert_to_datetime(subscription["asset"]["events"]["created"]["at"]),
+                    convert_to_datetime_subscription(subscription["events"]["created"]["at"]),
+                    convert_to_datetime_subscription(subscription["asset"]["events"]["created"]["at"]),
                     subscription["asset"]["id"],
                     subscription["asset"]["status"],
                     subscription["asset"]["external_id"],
@@ -291,8 +293,8 @@ def get_subscription_record(client, subscription, progress):
                     param_values["microsoft_tier1_mpn"],
                 ]
             )
-    except Exception:
-        pass
+    except Exception as e:
+        print(e)
     return output
 
 
