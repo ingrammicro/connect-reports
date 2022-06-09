@@ -71,6 +71,7 @@ def generate(client, parameters, progress_callback):
             get_value(subscription['tiers']["customer"]["contact_info"], "contact", "email"),
             get_asset_parameter(subscription, "isGovernmentEntity"),
             get_asset_parameter(subscription, "useAccountFor"),
+            get_asset_parameter(subscription, "orderMode"),
             get_value(subscription['tiers'], "tier1", "external_id"),
             get_value(subscription['tiers'], "tier1", "name"),
             get_value(subscription['tiers']["tier1"], "contact_info", "address_line1"),
