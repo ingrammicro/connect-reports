@@ -1,4 +1,4 @@
-from connect.client import R
+from connect.client import R, ClientError
 
 def generate(
     client=None,
@@ -16,26 +16,29 @@ def generate(
     total_products = products.count()
     progress = 0
     for prod in products:
-        product = client.products[prod['id']].get()
-        output = {
-            'id': product['id'],
-            'name': product['name'],
-            'vendor_id': product['owner']['id'],
-            'vendor_name': product['owner']['name']
-        }
-        rql = R()
-        rql &= R().product.id.eq(product['id'])
-        rql &= R().status.eq('listed')
-        listings = client.listings.filter(rql).all()
-        marketplaces = []
-        for listing in listings:
-            marketplaces.append(
-                {
-                    'id': listing['contract']['marketplace']['id'],
-                    'name': listing['contract']['marketplace']['name']
-                }
-            )
-        output['marketplaces'] = marketplaces
-        yield output
+        try:
+            product = client.products[prod['id']].get()
+            output = {
+                'id': product['id'],
+                'name': product['name'],
+                'vendor_id': product['owner']['id'],
+                'vendor_name': product['owner']['name']
+            }
+            rql = R()
+            rql &= R().product.id.eq(product['id'])
+            rql &= R().status.eq('listed')
+            listings = client.listings.filter(rql).all()
+            marketplaces = []
+            for listing in listings:
+                marketplaces.append(
+                    {
+                        'id': listing['contract']['marketplace']['id'],
+                        'name': listing['contract']['marketplace']['name']
+                    }
+                )
+            output['marketplaces'] = marketplaces
+            yield output
+        except ClientError:
+            pass
         progress += 1
         progress_callback(progress, total_products)
