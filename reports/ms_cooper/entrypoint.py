@@ -103,7 +103,7 @@ def process_subscription(client, subscription):
     output = []
     for item in subscription["items"]:
         try:
-            if int(item["quantity"]) == "0":
+            if int(item["quantity"]) == 0:
                 continue
             output.append(
                 (
