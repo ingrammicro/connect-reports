@@ -55,6 +55,12 @@ def get_parameter(request, param_id):
             return param["value"]
     return "-"
 
+def get_sub_parameter(subscription, param_id):
+    for param in subscription["params"]:
+        if param["id"] == param_id:
+            return param.get('value', '-')
+    return "-"
+
 
 def get_asset_parameter(asset, param_id):
     for param in asset["params"]:
@@ -68,6 +74,21 @@ def get_ta_parameter(request, tier, param_id, client):
         rql = R().configuration.account.id.eq(request['asset']['tiers'][tier]['id'])
         rql &= R().status.eq('approved')
         rql &= R().product.id.eq(request['asset']['product']['id'])
+        tc = client.ns('tier').collection("config-requests").filter(rql).order_by('-created').first()
+        if 'params' not in tc:
+            return "-"
+        for param in tc['params']:
+            if param["id"] == param_id:
+                return param["value"]
+    except Exception:
+        pass
+    return "-"
+
+def get_sub_ta_parameter(subscription, tier, param_id, client):
+    try:
+        rql = R().configuration.account.id.eq(subscription['tiers'][tier]['id'])
+        rql &= R().status.eq('approved')
+        rql &= R().product.id.eq(subscription['product']['id'])
         tc = client.ns('tier').collection("config-requests").filter(rql).order_by('-created').first()
         if 'params' not in tc:
             return "-"
