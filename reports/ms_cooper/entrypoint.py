@@ -113,7 +113,7 @@ def process_subscription(client, subscription):
                     convert_to_datetime(subscription["events"]["created"]["at"]),
                     convert_to_datetime(subscription["events"]["updated"]["at"]) if 'updated' in subscription['events'] else '-',
                     subscription["connection"]["type"].capitalize(),
-                    subscription["contract"].get("type", "distribution").capitalize(),
+                    get_contract_type(subscription.get("contract",{}).get('id','Distribution')),
                     subscription['product']['id'],
                     subscription['product']['name'],
                     str(subscription.get('billing', {}).get('period', {}).get('delta','')) + " " + subscription.get('billing', {}).get('period', {}).get('uom', 'Perpetual').capitalize(),
@@ -264,3 +264,8 @@ def populate_products(client):
     # Empty print due CLI Execution
     print("")
     print(f"Amount of products from microsoft to include in report {len(PRODUCTS)}")
+
+def get_contract_type(contract):
+    if contract.startswith("CRD-"):
+        return "Distribution"
+    return "Syndication"
