@@ -4,7 +4,7 @@ from reports.utils import (
     get_sub_parameter,
     get_sub_ta_parameter,
 )
-from datetime import date, timedelta
+from datetime import datetime
 
 HEADERS = (
     'Subscription ID', 'Subscription External ID', 'Subscription Status', 'Subscription Created At',
@@ -40,23 +40,27 @@ def generate(
     init_tc_cache(client)
     client.default_limit = 1000
 
-    last_day_of_prev_month = date.today().replace(day=1) - timedelta(days=1)
-    start_day_of_prev_month = date.today().replace(day=1) - timedelta(
-        days=last_day_of_prev_month.day,
+    last_day_of_prev_month = datetime.utcnow().replace(
+        day=1, hour=0, minute=0, second=0, microsecond=0,
     )
+    today = datetime.utcnow()
+    month, year = (today.month -1, today.year) if today.month != 1 else (12, today.year -1)
+    start_day_of_prev_month = today.replace(day=1, month=month, year=year)
 
     # Handling Active first
+    rqlactive = R().status.oneof(['active','suspended']) & R().product.id.oneof(PRODUCTS)
+    rqlactive &= R().events.created.lt(last_day_of_prev_month)
     sub_active_suspended = (
         client.ns('subscriptions')
         .collection('assets')
-        .filter(R().status.oneof(['active','suspended']) & R().product.id.oneof(PRODUCTS))
+        .filter(rqlactive)
         .order_by("-events.created.at")
     )
     # For terminated, termination must be in last month
 
     rql = R().status.eq('terminated') & R().product.id.oneof(PRODUCTS)
     rql &= R().events.updated.at.ge(start_day_of_prev_month)
-    rql &= R().events.updated.at.le(last_day_of_prev_month)
+    rql &= R().events.updated.at.lt(last_day_of_prev_month)
     sub_terminated = (
         client.ns('subscriptions')
         .collection('assets')
