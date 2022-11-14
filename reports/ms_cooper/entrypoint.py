@@ -20,6 +20,7 @@ HEADERS = (
 )
 
 TC_CACHE = {}
+ASSET_ITEM = []
 
 PRODUCTS = []
 
@@ -109,6 +110,8 @@ def process_subscription(client, subscription):
         try:
             if int(item["quantity"]) == 0:
                 continue
+            if subscription['id'] + '_' + item['id'] in ASSET_ITEM:
+                continue
             output.append(
                 (
                     subscription["id"],
@@ -180,6 +183,7 @@ def process_subscription(client, subscription):
                     param_values["microsoft_tier1_mpn"],
                 )
             )
+            ASSET_ITEM.append(subscription['id'] + '_' + item['id'])
         except Exception as e:
             print(f"Error in {subscription['id']}: {e}")
     return output
