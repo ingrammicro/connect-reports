@@ -58,7 +58,7 @@ def generate(
     )
     # For terminated, termination must be in last month
 
-    rql = R().status.eq('terminated') & R().product.id.oneof(PRODUCTS)
+    rql = R().status.oneof(['terminated', 'terminating']) & R().product.id.oneof(PRODUCTS)
     rql &= R().events.updated.at.ge(start_day_of_prev_month)
     rql &= R().events.updated.at.lt(last_day_of_prev_month)
     sub_terminated = (
