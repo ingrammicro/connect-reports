@@ -7,14 +7,36 @@
       {
          "name":"IM all Transactions report",
          "readme_file":"reports/all_transactions/readme.md",
-         "template":"reports/all_transactions/template.xlsx",
-         "start_row":2,
-         "start_col":1,
          "entrypoint":"reports.all_transactions.entrypoint.generate",
          "audience":[
             "provider"
          ],
-         "report_spec":"1",
+         "report_spec":"2",
+         "renderers":[
+            {
+               "id":"xlsx",
+               "type":"xlsx",
+               "default":false,
+               "description":"Export data in Microsoft Excel 2020 format.",
+               "template":"reports/all_transactions/template.xlsx",
+               "args":{
+                  "start_row":2,
+                  "start_col":1
+               }
+            },
+            {
+               "id":"json",
+               "type":"json",
+               "default":false,
+               "description":"Export data as JSON"
+            },
+            {
+               "id":"csv",
+               "type":"csv",
+               "default":true,
+               "description":"Export data as CSV"
+            }
+         ],
          "parameters":[
             {
                "id":"date",
@@ -106,14 +128,36 @@
       {
          "name":"Billing requests report for syndication partners",
          "readme_file":"reports/billing_requests/Readme.md",
-         "template":"reports/billing_requests/template.xlsx",
-         "start_row":2,
-         "start_col":1,
          "entrypoint":"reports.billing_requests.entrypoint.generate",
+         "renderers":[
+            {
+               "id":"xlsx",
+               "type":"xlsx",
+               "default":false,
+               "description":"Export data in Microsoft Excel 2020 format.",
+               "template":"reports/billing_requests/template.xlsx",
+               "args":{
+                  "start_row":2,
+                  "start_col":1
+               }
+            },
+            {
+               "id":"json",
+               "type":"json",
+               "default":false,
+               "description":"Export data as JSON"
+            },
+            {
+               "id":"csv",
+               "type":"csv",
+               "default":true,
+               "description":"Export data as CSV"
+            }
+         ],
          "audience":[
             "provider"
          ],
-         "report_spec":"1",
+         "report_spec":"2",
          "parameters":[
             {
                "id":"date",
@@ -134,15 +178,37 @@
       {
          "name":"Billing requests report for syndication partners at line item level",
          "readme_file":"reports/billing_requests_line_item/Readme.md",
-         "template":"reports/billing_requests_line_item/template.xlsx",
-         "start_row":2,
-         "start_col":1,
          "entrypoint":"reports.billing_requests_line_item.entrypoint.generate",
          "audience":[
             "provider",
             "vendor"
          ],
-         "report_spec":"1",
+         "report_spec":"2",
+         "renderers":[
+            {
+               "id":"xlsx",
+               "type":"xlsx",
+               "default":false,
+               "description":"Export data in Microsoft Excel 2020 format.",
+               "template":"reports/billing_requests_line_item/template.xlsx",
+               "args":{
+                  "start_row":2,
+                  "start_col":1
+               }
+            },
+            {
+               "id":"json",
+               "type":"json",
+               "default":false,
+               "description":"Export data as JSON"
+            },
+            {
+               "id":"csv",
+               "type":"csv",
+               "default":true,
+               "description":"Export data as CSV"
+            }
+         ],
          "parameters":[
             {
                "id":"date",
@@ -320,7 +386,7 @@
             {
                "id":"xlsx",
                "type":"xlsx",
-               "default":true,
+               "default":false,
                "description":"Export data in Microsoft Excel 2020 format.",
                "template":"reports/usage_files_status/templates/xlsx/template.xlsx",
                "args":{
@@ -337,7 +403,7 @@
             {
                "id":"csv",
                "type":"csv",
-               "default":false,
+               "default":true,
                "description":"Export data as CSV"
             }
          ],

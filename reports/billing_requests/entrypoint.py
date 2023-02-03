@@ -9,15 +9,32 @@ from connect.client import R
 from reports.utils import convert_to_datetime, get_basic_value, get_value
 
 
-def generate(client, parameters, progress_callback):
+HEADERS = (
+    'Billing request ID', 'From', 'To', 'Delta', 'Uom', 'Customer ID', 'Customer Name',
+    'Customer External ID', 'Tier 1 ID', 'Tier 1 Name', 'Tier 1 External ID',
+    'Tier 2 ID', 'Tier 2 Name', 'Tier 2 External ID', 'Provider ID', 'Provider Name',
+    'Vendor ID', 'Vendor Name', 'Product ID', 'Product Name', 'Subscription ID',
+    'Subscription External ID', 'Subscription Status', 'Susbcription Type',
+    'Hub ID', 'Hub Name'
+)
+def generate(
+    client=None,
+    parameters=None,
+    progress_callback=None,
+    renderer_type=None,
+    extra_context_callback=None,
+):
     requests = _get_requests(client, parameters)
 
     progress = 0
     total = requests.count()
 
+    if renderer_type == 'csv':
+        yield HEADERS
+
     for request in requests:
         connection = request['asset']['connection']
-        yield (
+        result = (
             request['id'],
             convert_to_datetime(request['period']['from']),
             convert_to_datetime(request['period']['to']),
@@ -45,9 +62,15 @@ def generate(client, parameters, progress_callback):
             get_value(connection, 'hub', 'id') if 'hub' in connection else '',
             get_value(connection, 'hub', 'name') if 'hub' in connection else '',
         )
+        if renderer_type == 'json':
+            yield {
+                HEADERS[idx].replace(' ', '_').lower(): value
+                for idx, value in enumerate(result)
+            }
+        else:
+            yield result
         progress += 1
         progress_callback(progress, total)
-
 
 def _get_requests(client, parameters):
     query = R()

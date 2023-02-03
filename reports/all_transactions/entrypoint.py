@@ -15,7 +15,23 @@ PRODUCTS_TO_SKIP = [
 ]
 
 
-def generate(client, parameters, progress_callback):
+HEADERS = (
+    'Request Type', 'Request ID', 'Product ID', 'Product Name', 'Vendor ID', 'Vendor Name',
+    'Request Created At', 'Subscription Created At', 'Subscription ID', 'Subscription Status',
+    'Subscription External ID', 'Subscription Customer', 'Customer external id', 'Customer Country',
+    'Tier 1 Company name', 'Tier 1 External Id', 'Tier 1 Country location', 'Tier 2 Company name',
+    'Tier 2 External Id', 'Tier 2 Country location', 'Item ID', 'Item MPN', 'Item Description',
+    'Item Period', 'Item Old Quantity', 'Item Quantity', 'Item delta', 'Provider ID',
+    'Provider Name', 'Source MKP', 'MKP Name', 'Contract Type', 'Microsoft Tier1 MPN',
+    'AWS Account ID',
+)
+def generate(
+    client=None,
+    parameters=None,
+    progress_callback=None,
+    renderer_type=None,
+    extra_context_callback=None,
+):
     subscriptions_rql = R()
     if parameters.get("date"):
         subscriptions_rql &= R().events.created.at.ge(parameters['date']['after'])
@@ -52,6 +68,8 @@ def generate(client, parameters, progress_callback):
     ex = futures.ThreadPoolExecutor(
         max_workers=6,
     )
+    if renderer_type == 'csv':
+        yield HEADERS
 
     wait_for = []
     for request in requests:
@@ -68,7 +86,13 @@ def generate(client, parameters, progress_callback):
     for future in futures.as_completed(wait_for):
         results = future.result()
         for result in results:
-            yield result
+            if renderer_type == 'json':
+                yield {
+                    HEADERS[idx].replace(' ', '_').lower(): value
+                    for idx, value in enumerate(result)
+                }
+            else:
+                yield result
 
     wait_for = []
     for subscription in subscriptions:
@@ -84,7 +108,13 @@ def generate(client, parameters, progress_callback):
     for future in futures.as_completed(wait_for):
         results = future.result()
         for result in results:
-            yield result
+            if renderer_type == 'json':
+                yield {
+                    HEADERS[idx].replace(' ', '_').lower(): value
+                    for idx, value in enumerate(result)
+                }
+            else:
+                yield result
 
 
 def get_request_record(client, request, progress):
