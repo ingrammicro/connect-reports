@@ -81,8 +81,6 @@ def generate(
             yield result
         progress += 1
         progress_callback(progress, total)
-        if progress == 500:
-            break
 
 
 def _get_requests(client, parameters):
