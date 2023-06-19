@@ -50,7 +50,7 @@ def generate(
 
     # Handling Active first
     rqlactive = R().status.oneof(['active','suspended']) & R().product.id.oneof(PRODUCTS)
-    rqlactive &= R().events.created.lt(last_day_of_prev_month)
+    rqlactive &= R().events.created.at.lt(last_day_of_prev_month)
     sub_active_suspended = (
         client.ns('subscriptions')
         .collection('assets')
