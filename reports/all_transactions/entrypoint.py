@@ -32,6 +32,8 @@ def generate(
     renderer_type=None,
     extra_context_callback=None,
 ):
+    client.default_limit = 1000
+
     subscriptions_rql = R()
     if parameters.get("date"):
         subscriptions_rql &= R().events.created.at.ge(parameters['date']['after'])
@@ -45,7 +47,7 @@ def generate(
         client.ns('subscriptions')
         .collection('requests')
         .filter(subscriptions_rql)
-        .order_by("-events.created.at")
+        .order_by("events.created.at")
     )
     total_subscriptions = subscriptions.count()
 
@@ -59,32 +61,37 @@ def generate(
     for product in PRODUCTS_TO_SKIP:
         requests_rql &= R().asset.product.id.ne(product)
     requests_rql &= R().type.oneof(request_types)
-    requests = client.requests.filter(requests_rql).order_by("-created")
+    requests = client.requests.filter(requests_rql).order_by("created")
 
     total_requests = requests.count()
 
     progress = Progress(progress_callback, total_subscriptions + total_requests)
 
-    ex = futures.ThreadPoolExecutor(
-        max_workers=6,
-    )
+    ex = futures.ThreadPoolExecutor()
+
     if renderer_type == 'csv':
         yield HEADERS
 
     wait_for = []
-    for request in requests:
+
+    for i in range(0, total_requests, 1000):
         wait_for.append(
             ex.submit(
-                get_request_record,
+                process_requests_page,
                 client,
-                request,
-                progress,
+                requests[i:min(i + 1000, total_requests)],
+                progress,   
             )
         )
-        progress.increment()
 
     for future in futures.as_completed(wait_for):
-        results = future.result()
+        results = []
+        try:
+            results = future.result()
+        except Exception as e:
+            ex.shutdown(wait=False, cancel_futures=True)
+            raise e
+
         for result in results:
             if renderer_type == 'json':
                 yield {
@@ -95,18 +102,26 @@ def generate(
                 yield result
 
     wait_for = []
-    for subscription in subscriptions:
+
+    for i in range(0, total_subscriptions, 1000):
         wait_for.append(
             ex.submit(
-                get_subscription_record,
+                process_subscriptions_page,
                 client,
-                subscription,
-                progress,
+                subscriptions[i:min(i + 1000, total_subscriptions)],
+                progress,   
             )
         )
 
+
     for future in futures.as_completed(wait_for):
-        results = future.result()
+        results = []
+        try:
+            results = future.result()
+        except Exception as e:
+            ex.shutdown(wait=False, cancel_futures=True)
+            raise e
+
         for result in results:
             if renderer_type == 'json':
                 yield {
@@ -117,7 +132,23 @@ def generate(
                 yield result
 
 
-def get_request_record(client, request, progress):
+def process_requests_page(client, requests, progress):
+    results = []
+    for request in requests:
+        results.extend(get_request_record(client, request))
+        progress.increment()
+    return results
+
+
+def process_subscriptions_page(client, requests, progress):
+    results = []
+    for request in requests:
+        results.extend(get_subscription_record(client, request))
+        progress.increment()
+    return results
+
+
+def get_request_record(client, request):
     param_values = get_product_specifics(request, client)
     output = []
     for item in request["asset"]["items"]:
@@ -193,11 +224,10 @@ def get_request_record(client, request, progress):
             )
         except Exception:
             pass
-    progress.increment()
     return output
 
 
-def get_subscription_record(client, subscription, progress):
+def get_subscription_record(client, subscription):
     param_values = get_product_specifics(subscription, client)
     output = []
     try:
@@ -278,7 +308,6 @@ def get_subscription_record(client, subscription, progress):
             )
     except Exception:
         pass
-    progress.increment()
     return output
 
 
