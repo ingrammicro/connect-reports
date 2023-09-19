@@ -8,6 +8,7 @@ from reports.utils import (
     get_ta_parameter,
 )
 from concurrent import futures
+from threading import Lock
 
 
 HEADERS = (
@@ -23,6 +24,8 @@ HEADERS = (
 )
 
 TC_CACHE = {}
+
+CACHE_LOCK = Lock()
 
 PRODUCTS = [
         'PRD-814-505-018',
@@ -50,10 +53,7 @@ def generate(
         extra_context_callback=None,
 ):
     init_tc_cache()
-    #limit = client.default_limit
     client.default_limit = 1000
-    # populate_ta_cache(parameters, client)
-    #client.default_limit = limit
     subscriptions_rql = R()
 
     if parameters.get("date"):
@@ -69,7 +69,7 @@ def generate(
         client.ns('subscriptions')
         .collection('requests')
         .filter(subscriptions_rql)
-        .order_by("-events.created.at")
+        .order_by("events.created.at")
     )
     total_subscriptions = subscriptions.count()
 
@@ -84,7 +84,7 @@ def generate(
     if parameters.get('mkp') and parameters['mkp']['all'] is False:
         requests_rql &= R().asset.marketplace.id.oneof(parameters['mkp']['choices'])
     requests_rql &= R().type.oneof(request_types)
-    requests = client.requests.filter(requests_rql)
+    requests = client.requests.filter(requests_rql).order_by('created')
 
     total_requests = requests.count()
     total_progress = total_subscriptions + total_requests
@@ -97,19 +97,25 @@ def generate(
 
 
     wait_for = []
-    for request in requests:
+
+    for i in range(0, total_requests, 1000):
         wait_for.append(
             ex.submit(
-                get_request_record,
+                process_requests_page,
                 client,
-                request,
-                progress,
+                requests[i:min(i + 1000, total_requests)],
+                progress,   
             )
         )
-        progress.increment()
 
     for future in futures.as_completed(wait_for):
-        results = future.result()
+        results = []
+        try:
+            results = future.result()
+        except Exception as e:
+            ex.shutdown(wait=False, cancel_futures=True)
+            raise e
+
         for result in results:
             if renderer_type == 'json':
                 yield {
@@ -120,19 +126,25 @@ def generate(
                 yield result
 
     wait_for = []
-    for subscription in subscriptions:
+
+    for i in range(0, total_subscriptions, 1000):
         wait_for.append(
             ex.submit(
-                get_subscription_record,
+                process_subscriptions_page,
                 client,
-                subscription,
-                progress,
+                subscriptions[i:min(i + 1000, total_subscriptions)],
+                progress,   
             )
         )
-        progress.increment()
 
     for future in futures.as_completed(wait_for):
-        results = future.result()
+        results = []
+        try:
+            results = future.result()
+        except Exception as e:
+            ex.shutdown(wait=False, cancel_futures=True)
+            raise e
+
         for result in results:
             if renderer_type == 'json':
                 yield {
@@ -141,6 +153,22 @@ def generate(
                 }
             else:
                 yield result
+
+
+def process_requests_page(client, requests, progress):
+    results = []
+    for request in requests:
+        results.extend(get_request_record(client, request, progress))
+        progress.increment()
+    return results
+
+
+def process_subscriptions_page(client, requests, progress):
+    results = []
+    for request in requests:
+        results.extend(get_subscription_record(client, request, progress))
+        progress.increment()
+    return results
 
 
 def get_request_record(client, request, progress):
@@ -336,19 +364,9 @@ def get_param_mpn(request, client):
     if request['asset']['tiers']['tier1']['id'] in TC_CACHE[request['asset']['product']['id']]:
         return TC_CACHE[request['asset']['product']['id']][request['asset']['tiers']['tier1']['id']]
     mpn = get_ta_parameter(request, 'tier1', 'tier1_mpn', client)
-    TC_CACHE[request['asset']['product']['id']][request['asset']['tiers']['tier1']['id']] = mpn
+    with CACHE_LOCK:
+        TC_CACHE[request['asset']['product']['id']][request['asset']['tiers']['tier1']['id']] = mpn
     return mpn
-
-def populate_ta_cache(parameters, client):
-    rql = R()
-    rql &= R().product.id.oneof(PRODUCTS)
-    if parameters.get('mkp') and parameters['mkp']['all'] is False:
-        rql &= R().marketplace.id.oneof(parameters['mkp']['choices'])
-    tcs = client.ns('tier').collection('configs').filter(rql)
-    for tc in tcs:
-        if tc['product']['id'] not in TC_CACHE:
-            TC_CACHE[tc['product']['id']] = {}
-        TC_CACHE[tc['product']['id']][tc['account']['id']] = get_param_value(tc['params'], 'tier1_mpn')
 
 def get_param_value(params, param_id):
     for param in params:
