@@ -60,6 +60,7 @@ def generate(client, parameters, progress_callback):
             subscription['product']['id'],
             convert_to_datetime(subscription['events']['created']['at']),
             get_asset_parameter(subscription, "awsAccountId"),
+            get_asset_parameter(subscription, "awsAccountEmail"),
             get_value(subscription['tiers'], "customer", "external_id"),
             get_value(subscription['tiers'], "customer", "name"),
             get_value(subscription['tiers']["customer"], "contact_info", "address_line1"),
