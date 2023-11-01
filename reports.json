@@ -28,7 +28,7 @@
                "type":"product",
                "name":"Product list",
                "required":true,
-               "description":"Select the products that represents AWS, ALL option is not valid"
+               "description":"Select the products that represents TS, ALL option is not valid"
             }
          ]
       }
