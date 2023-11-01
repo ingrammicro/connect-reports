@@ -1,4 +1,4 @@
-from cnct import R
+from connect.client import R
 from reports.utils import (
     convert_to_datetime,
     get_asset_parameter,
@@ -10,8 +10,7 @@ from reports.utils import (
 
 def generate(client, parameters, progress_callback):
     subscriptions_rql = R()
-    if not parameters.get("products") or len(parameters['products']['choices']) < 1:
-        raise RuntimeError("AWS products was not selected")
+   
     if parameters.get("date"):
         subscriptions_rql &= R().events.created.at.ge(parameters['date']['after'])
         subscriptions_rql &= R().events.created.at.le(parameters['date']['before'])
