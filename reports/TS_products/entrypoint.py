@@ -7,20 +7,8 @@ from reports.utils import (
 
 
 
-def warm_up_tcs(client, products):
-    rql_filter = R()
-    rql_filter &= R().product.id.oneof(products)
-    tcs = client.ns('tier').configs.filter(rql_filter).all()
-    for tc in tcs:
-        if not awsmpn.get(f'{tc["account"]["id"]}_{tc["product"]["id"]}'):
-            for param in tc['params']:
-                if param['id'] == 'awsApnId':
-                    awsmpn[f'{tc["account"]["id"]}_{tc["product"]["id"]}'] = param.get('value', '-')
-
-
 
 def generate(client, parameters, progress_callback):
-    warm_up_tcs(client, parameters['products']['choices'])
     subscriptions_rql = R()
     if not parameters.get("products") or len(parameters['products']['choices']) < 1:
         raise RuntimeError("AWS products was not selected")
@@ -40,9 +28,7 @@ def generate(client, parameters, progress_callback):
             subscription['marketplace']['name'],
             subscription['product']['id'],
             convert_to_datetime(subscription['events']['created']['at']),
-            get_asset_parameter(subscription, "vendor_subscription_id"),
-            get_asset_parameter(subscription, "customer_purchase_order_number")
-           
+            get_asset_parameter(subscription, "vendor_subscription_id")           
         )
         progress += 1
         progress_callback(progress, total_subscriptions)
