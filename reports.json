@@ -6,7 +6,7 @@
    "reports":[
       {
          "name":"TS Subscriptions",
-         "readme_file":"reports/TS_products/readme.md",
+         "readme_file":"reports/TS_products/Readme.md",
          "template":"reports/TS_products/template.xlsx",
          "start_row":2,
          "start_col":1,
