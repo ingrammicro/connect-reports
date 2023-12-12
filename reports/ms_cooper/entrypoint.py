@@ -248,8 +248,9 @@ def get_param_value(params, param_id):
             return param['value'] if 'value' in param else '-'
     return '-'
 
+
 def init_product_tc_cache(product, client):
-    rql = R().product.id.eq(product) & R().status.eq('active') & R().tier_level.eq(1)
+    rql = R().product.id.eq(product) & R().status.eq('active') & R().tier_level.eq(1) & R().connection.type.ne('null()')
     tcs = client.ns('tier').collection('configs').filter(rql).select(
         '-configuration',
         '-connection',
