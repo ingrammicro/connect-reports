@@ -17,6 +17,7 @@ def convert_to_datetime(param_value):
 def convert_to_datetime_subscription(param_value):
     return datetime.fromisoformat(param_value).strftime("%Y-%m-%d %H:%M:%S")
 
+
 def get_basic_value(base, value):
     if base and value in base:
         return base[value]
@@ -55,9 +56,10 @@ def get_parameter(request, param_id):
             return param["value"]
     return "-"
 
+
 def get_sub_parameter(subscription, param_id):
     for param in subscription["params"]:
-        if param["id"] == param_id:
+        if param["id"] == param_id or param["name"] == param_id:
             return param.get('value', '-')
     return "-"
 
@@ -83,6 +85,7 @@ def get_ta_parameter(request, tier, param_id, client):
     except Exception:
         pass
     return "-"
+
 
 def get_sub_ta_parameter(subscription, tier, param_id, client):
     try:
